@@ -1,9 +1,44 @@
 #include "crow.h"
 
+static int SERVER_PORT = 18080;
+
 static const std::string SAVE_FILE_NAME = "uploaded_save.zip";
 static const std::string SAVE_FILE_EXTENSION = ".zip";
 
 int main() {
+	for (int i = 0; i < argc; i++)
+	{
+		std::string arg = argv[i];
+		if (arg == "--help" || arg == "-h")
+		{
+			std::cout << "Usage: minesync_server.exe [options] <arguments>\n"
+				<< "options:\n"
+				<< "  -h, --help\t\tDisplay this help message\n"
+				<< "  -P, --port\t\tSpecify server Port number\n\n";
+			return 0;
+		}
+		if (i + 1 <= argc)
+		{
+			try
+			{
+				if (arg == "--port" || arg == "-P")
+				{
+					SERVER_PORT = std::stoi(argv[i + 1]);
+				}
+			}
+			catch (std::invalid_argument& e)
+			{
+				std::cerr << "Error:port must be a valid number\n";
+				return 1;
+			}
+		}
+		else
+		{
+			std::cerr << "Error: port requires a value\n";
+			return 1;
+		}
+	}
+
     crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")
@@ -65,5 +100,5 @@ int main() {
         return crow::response(200, responseJson);
     });
 
-    app.port(18080).multithreaded().run();
+    app.port(SERVER_PORT).multithreaded().run();
 }
