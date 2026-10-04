@@ -48,7 +48,7 @@ int main() {
         if (fileBody.empty())
             return crow::response(400, "Error: No file uploaded or 'file' key missing.");
 
-        std::string filename = name;
+        std::string filename = std::filesystem::path(name).filename().string();
         auto headers = fileHeaders;
 
         std::ofstream outFile(filename, std::ios::binary);
