@@ -25,11 +25,20 @@ int main() {
 
     CROW_ROUTE(app, "/sync")
     .methods(crow::HTTPMethod::GET)([](const crow::request& req) {
-        const char* filename = req.url_params.get("name");
-        if (!filename)
+        const char* nameParam = req.url_params.get("name");
+        if (!nameParam)
             return crow::response(400, "Missing 'name' query parameter");
 
-        std::ifstream file(( "./" + std::string(filename) ), std::ios::binary);
+        std::string filename = std::filesystem::path(nameParam).filename().string();
+        if (filename.empty())
+            return crow::response(400, "Error: Invalid filename.");
+
+
+        std::filesystem::path filePath = get_save_file_path() / filename;
+        if (!std::filesystem::exists(filePath))
+            return crow::response(404, "Error: Requested file not found on server.");
+
+        std::ifstream file(filePath, std::ios::binary);
         if (!file.is_open()) {
             return crow::response(500, "Error: Failed to open file for writing on server.");
         }
