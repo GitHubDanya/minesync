@@ -77,7 +77,7 @@ int main() {
             return crow::response(500, "Error: Failed to create storage directory (" + ec.message() + ").");
         std::filesystem::path targetPath = uploadDir / filename;
 
-        std::ofstream outFile(filename, std::ios::binary);
+        std::ofstream outFile(targetPath, std::ios::binary);
         if (!outFile) {
             return crow::response(500, "Error: Failed to open file for writing on server.");
         }
