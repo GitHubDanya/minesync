@@ -86,7 +86,7 @@ void MainWindow::setStatus(const std::string& message, StatusType type, float pr
   statusProgress->value(progress);
 
   using Type = StatusType;
-  statusProgress->color(type == Type::Error   ? FL_RED :
+  statusProgress->color2(type == Type::Error   ? FL_RED :
                         type == Type::Warning ? FL_YELLOW :
                         type == Type::Success ? FL_GREEN : FL_BLUE);
   statusProgress->redraw();
