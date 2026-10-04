@@ -73,6 +73,8 @@ int main() {
         std::filesystem::path uploadDir = get_save_file_path();
         std::error_code ec;
         std::filesystem::create_directory(uploadDir, ec);
+        if (ec)
+            return crow::response(500, "Error: Failed to create storage directory (" + ec.message() + ").");
         std::filesystem::path targetPath = uploadDir / filename;
 
         std::ofstream outFile(filename, std::ios::binary);
