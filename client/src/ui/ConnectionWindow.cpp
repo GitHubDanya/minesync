@@ -35,5 +35,5 @@ std::string ConnectionWindow::getUrlInput() const {
 }
 
 void ConnectionWindow::setButtonLabel(const std::string label) {
-    connectionInput->copy_label(label.c_str());
+    connectButton->copy_label(label.c_str());
 }
