@@ -84,13 +84,11 @@ add_library(minesync_common STATIC
         common/files/FileHelpers.h
 )
 
-if(NOT WIN32)
-    target_compile_definitions(minesync_common PRIVATE
-            _GNU_SOURCE
-            _LARGEFILE64_SOURCE
-            _FILE_OFFSET_BITS=64
-    )
-endif()
+target_compile_definitions(minesync_common PRIVATE
+        _GNU_SOURCE
+        _LARGEFILE64_SOURCE
+        _FILE_OFFSET_BITS=64
+)
 
 target_include_directories(minesync_common PUBLIC
         common/
@@ -197,6 +195,8 @@ if(WIN32)
     set(CPACK_GENERATOR "ZIP")
 endif()
 
+include(CPack)
+
 if(WIN32)
     file(GLOB MINGW_CLIENT_DLLS
             "/usr/x86_64-w64-mingw32/bin/libssp-0.dll"
@@ -208,5 +208,3 @@ if(WIN32)
     )
     install(FILES ${MINGW_CLIENT_DLLS} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT client)
 endif()
-
-include(CPack)
