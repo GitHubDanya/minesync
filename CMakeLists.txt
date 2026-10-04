@@ -198,15 +198,28 @@ if(WIN32)
 endif()
 
 if(WIN32)
+    if(DEFINED ENV{MINGW_PREFIX})
+        set(MINGW_BIN_DIR "$ENV{MINGW_PREFIX}/bin")
+    else()
+        set(MINGW_BIN_DIR "/usr/x86_64-w64-mingw32/bin")
+    endif()
+
     file(GLOB MINGW_CLIENT_DLLS
-            "/usr/x86_64-w64-mingw32/bin/libssp-0.dll"
-            "/usr/x86_64-w64-mingw32/bin/mgwfltk*.dll"
-            "/usr/x86_64-w64-mingw32/bin/libcairo*.dll"
-            "/usr/x86_64-w64-mingw32/bin/libpixman*.dll"
-            "/usr/x86_64-w64-mingw32/bin/libpng*.dll"
-            "/usr/x86_64-w64-mingw32/bin/zlib1.dll"
+            "${MINGW_BIN_DIR}/libssp-*.dll"
+            "${MINGW_BIN_DIR}/libfltk*.dll"
+            "${MINGW_BIN_DIR}/mgwfltk*.dll"
+            "${MINGW_BIN_DIR}/libcairo*.dll"
+            "${MINGW_BIN_DIR}/libpixman*.dll"
+            "${MINGW_BIN_DIR}/libpng*.dll"
+            "${MINGW_BIN_DIR}/zlib*.dll"
+            "${MINGW_BIN_DIR}/libstdc++-6.dll"
+            "${MINGW_BIN_DIR}/libgcc_s_*.dll"
+            "${MINGW_BIN_DIR}/libwinpthread-1.dll"
     )
-    install(FILES ${MINGW_CLIENT_DLLS} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT client)
+
+    if(MINGW_CLIENT_DLLS)
+        install(FILES ${MINGW_CLIENT_DLLS} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT client)
+    endif()
 endif()
 
 include(CPack)
