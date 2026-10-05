@@ -1,3 +1,10 @@
+---
+name: Feature Request
+about: Suggest an idea or enhancement for this project
+title: '[FEATURE]: '
+labels: ['enhancement']
+---
+
 ### Problem Statement
 A clear description of the current limitation or problem (e.g., "I am frustrated when...").
 

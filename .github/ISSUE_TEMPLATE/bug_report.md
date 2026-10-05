@@ -1,3 +1,10 @@
+---
+name: Bug Report
+about: Report a minesync bug
+title: '[BUG] [<component>]: '
+labels: ['bug']
+---
+
 ### Affected Component
 What component was affected? (e.g., `../../common/data/World.cpp` or `server/main.cpp`)
 
