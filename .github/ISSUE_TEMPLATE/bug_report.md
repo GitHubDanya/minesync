@@ -1,5 +1,5 @@
 ### Affected Component
-What component was affected? (e.g., `common/data/World.cpp` or `server/main.cpp`)
+What component was affected? (e.g., `../../common/data/World.cpp` or `server/main.cpp`)
 
 ### Bug Description
 A clear and concise description of the bug.
