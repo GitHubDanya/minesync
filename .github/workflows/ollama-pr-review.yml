@@ -25,9 +25,8 @@ jobs:
           REPO: ${{ github.repository }}
           MODEL_NAME: "qwen2.5-coder:14b"
         run: |
-          COMMIT_ID=$(gh pr view $PR_NUMBER --json headRefOid -q .headRefOid)
-
-          DIFF=$(gh pr diff $PR_NUMBER)
+          COMMIT_ID=$(gh pr view$PR_NUMBER --json headRefOid -q .headRefOid)
+          DIFF=$(gh pr diff$PR_NUMBER)
 
           SYSTEM_PROMPT="You are an expert code reviewer. Analyze the provided Git diff and respond strictly in JSON matching this exact structure:
           {
@@ -40,7 +39,7 @@ jobs:
               }
             ]
           }
-
+          
           Rules for review:
           1. Only reference line numbers that exist on the addition/modified side (RIGHT side) of the diff.
           2. When suggesting a code fix or improvement, always include a GitHub suggestion block inside the body field using this exact format:
@@ -57,20 +56,24 @@ jobs:
             --arg prompt "$PROMPT" \
             '{model: $model, system: $system, prompt:$prompt, format: "json", stream: false}')
 
-          RESPONSE=$(curl -s http://localhost:11434/api/generate \
+          RESPONSE=$(curl -s --max-time 120 http://localhost:11434/api/generate \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          RAW_RESPONSE=$(echo "$RESPONSE" | jq -r '.response // empty')
+          echo "=== RAW OLLAMA API RESPONSE ==="
+          echo "$RESPONSE"
+          echo "==============================="
 
-          echo "=== RAW OLLAMA RESPONSE ==="
-          echo "$RAW_RESPONSE"
-          echo "==========================="
+          RAW_RESPONSE=$(echo "$RESPONSE" | jq -r '.response // empty')
 
           CLEAN_JSON=$(echo "$RAW_RESPONSE" | sed -e 's/^```json//' -e 's/^```//' -e 's/```$//')
 
-          SUMMARY=$(echo "$CLEAN_JSON" | jq -r '.summary // "Automated Code Review"')
-          COMMENTS=$(echo "$CLEAN_JSON" | jq '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]')
+          SUMMARY=$(echo "$CLEAN_JSON" | jq -r '.summary // "Automated Code Review"' 2>/dev/null || echo "Automated Code Review")
+          COMMENTS=$(echo "$CLEAN_JSON" | jq -c '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]' 2>/dev/null || echo "[]")
+
+          if [ -z "$COMMENTS" ] || [ "$COMMENTS" = "null" ]; then
+            COMMENTS="[]"
+          fi
 
           REVIEW_PAYLOAD=$(jq -n \
             --arg commit_id "$COMMIT_ID" \
