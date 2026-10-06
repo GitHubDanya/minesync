@@ -15,16 +15,19 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
 
       - name: Generate Inline PR Review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          COMMIT_ID: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.issue.number }}
           REPO: ${{ github.repository }}
           MODEL_NAME: "qwen2.5-coder:14b"
         run: |
-          DIFF=$(gh pr diff $PR_NUMBER)
+          COMMIT_ID=$(gh pr view$PR_NUMBER --json headRefOid -q .headRefOid)
+
+          DIFF=$(gh pr diff$PR_NUMBER)
 
           SYSTEM_PROMPT="You are an expert code reviewer. Analyze the provided Git diff and respond strictly in JSON matching this exact structure:
           {
@@ -52,7 +55,7 @@ jobs:
             --arg model "$MODEL_NAME" \
             --arg system "$SYSTEM_PROMPT" \
             --arg prompt "$PROMPT" \
-            '{model: $model, system: $system, prompt: $prompt, format: "json", stream: false}')
+            '{model: $model, system: $system, prompt:$prompt, format: "json", stream: false}')
 
           RESPONSE=$(curl -s http://localhost:11434/api/generate \
             -H "Content-Type: application/json" \
