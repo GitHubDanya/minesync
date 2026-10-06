@@ -14,12 +14,21 @@ The client uses an MVP (Model, View, Presenter) pattern, and all client specific
 
 ## Quick Start
 
+To get the app running, you can download the latest release from the [releases](https://github.com/GitHubDanya/minesync/releases) tab.
+It is strongly recommended to run the server on Linux or WSL.
+
+A make task is written for quick setup of the server, which builds the server and loads it
+into a systemd process.
+
+Set up the server using `make install-server`.
+
+Uninstall the server using `make uninstall-server`.
 
 ## Building
 ### Building on Linux using make
 Ensure these dependencies are installed (example for Ubuntu/Debian, adjust as needed):
 
-```shelll
+```shell
 sudo apt update && sudo apt install -y cmake ninja-build libfltk1.3-dev libcairo2-dev pkg-config libssl-dev libx11-dev
 ```
 
