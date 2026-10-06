@@ -12,14 +12,26 @@ This workflow provides a really simple and reliable system for persisting state.
 The server uses [Crow](https://crowcpp.org/master/) routes for exposing API endpoints.
 The client uses an MVP (Model, View, Presenter) pattern, and all client specifications must follow it.
 
+## Quick Start
+
 
 ## Building
-### Building on Linux
+### Building on Linux using make
 Ensure these dependencies are installed (example for Ubuntu/Debian, adjust as needed):
 
 ```shelll
 sudo apt update && sudo apt install -y cmake ninja-build libfltk1.3-dev libcairo2-dev pkg-config libssl-dev libx11-dev
 ```
+
+The quickest way to build the application is using `make`:
+
+| Project | Command
+| :--     | :--
+| Both    | `make build`
+| Client only | `make build-client`
+| Server only | `make build-client`
+
+### Building on Linux manually
 
 Linux target:
 ```shell
