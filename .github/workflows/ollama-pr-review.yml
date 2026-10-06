@@ -61,12 +61,17 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          OLLAMA_JSON=$(echo "$RESPONSE" | jq -r '.response')
+          RAW_RESPONSE=$(echo "$RESPONSE" | jq -r '.response // empty')
 
-          SUMMARY=$(echo "$OLLAMA_JSON" | jq -r '.summary // "Automated Code Review"')
+          echo "=== RAW OLLAMA RESPONSE ==="
+          echo "$RAW_RESPONSE"
+          echo "==========================="
 
-          COMMENTS=$(echo "$OLLAMA_JSON" | jq '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]')
-          
+          CLEAN_JSON=$(echo "$RAW_RESPONSE" | sed -e 's/^```json//' -e 's/^```//' -e 's/```$//')
+
+          SUMMARY=$(echo "$CLEAN_JSON" | jq -r '.summary // "Automated Code Review"')
+          COMMENTS=$(echo "$CLEAN_JSON" | jq '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]')
+
           REVIEW_PAYLOAD=$(jq -n \
             --arg commit_id "$COMMIT_ID" \
             --arg body "$SUMMARY" \
