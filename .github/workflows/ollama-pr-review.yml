@@ -60,7 +60,7 @@ jobs:
 
           if [[ -z "$(echo "$ANNOTATED_DIFF" | tr -d '[:space:]')" ]]; then
             echo "No additions or changes detected in PR diff."
-            gh pr comment $PR_NUMBER --body "🤖 **Ollama Code Review**: No added or modified lines found in this PR to review."
+            gh pr comment $PR_NUMBER --body "**Ollama Code Review**: No added or modified lines found in this PR to review."
             exit 0
           fi
 
@@ -102,7 +102,7 @@ jobs:
           SUMMARY=$(echo "$CLEAN_JSON" | jq -r '.summary // "Automated Code Review"' 2>/dev/null || echo "Automated Code Review")
           COMMENTS=$(echo "$CLEAN_JSON" | jq -c '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]' 2>/dev/null || echo "[]")
 
-          if [[ -z "$COMMENTS" \vert{}\vert{} "$COMMENTS" == "null" ]]; then
+          if [[ -z "$COMMENTS" || "$COMMENTS" == "null" ]]; then
             COMMENTS="[]"
           fi
 
