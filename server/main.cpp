@@ -9,7 +9,13 @@ inline static std::filesystem::path get_save_file_path() {
     if (programData && programData[0] != '\0') {
         return std::filesystem::path(programData) / "MineSync" / "uploads";
     }
-    return std::filesystem::path("C:/ProgramData/MineSync/uploads");
+    std::filesystem::path path = std::filesystem::path("C:/ProgramData/MineSync/uploads");
+    std::error_code ec;
+    std::filesystem::create_directories(path, ec);
+    if (ec) {
+        throw std::runtime_error("Failed to create directory: " + ec.message());
+    }
+    return path;
 #else
     return ("/var/lib/minesync/uploads");
 #endif
