@@ -3,21 +3,14 @@
 static const std::string SAVE_FILE_NAME = "uploaded_save.zip";
 static const std::string SAVE_FILE_EXTENSION = ".zip";
 
-inline static std::filesystem::path get_save_file_path() {
+inline std::filesystem::path get_save_file_path() {
 #if defined(_WIN32)
-    const char* programData = std::getenv("PROGRAMDATA");
-    if (programData && programData[0] != '\0') {
+    if (const char* programData = std::getenv("PROGRAMDATA"); programData && programData[0] != '\0') {
         return std::filesystem::path(programData) / "MineSync" / "uploads";
     }
-    std::filesystem::path path = std::filesystem::path("C:/ProgramData/MineSync/uploads");
-    std::error_code ec;
-    std::filesystem::create_directories(path, ec);
-    if (ec) {
-        throw std::runtime_error("Failed to create directory: " + ec.message());
-    }
-    return path;
+    return std::filesystem::path("C:/ProgramData/MineSync/uploads");
 #else
-    return ("/var/lib/minesync/uploads");
+    return "/var/lib/minesync/uploads";
 #endif
 }
 
