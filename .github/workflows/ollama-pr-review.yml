@@ -56,25 +56,13 @@ jobs:
                       output.append(f"Line {new_line_num} (context): {line}")
 
           print("\n".join(output))
+          ')
 
           if [[ -z "$(echo "$ANNOTATED_DIFF" | tr -d '[:space:]')" ]]; then
             echo "No additions or changes detected in PR diff."
             gh pr comment $PR_NUMBER --body "**Ollama Code Review**: No added or modified lines found in this PR to review."
             exit 0
           fi
-
-          SYSTEM_PROMPT="You are an expert code reviewer analyzing an annotated Git diff.
-          Respond strictly in JSON matching this exact structure:
-          {
-            \"summary\": \"General overview of the PR\",
-            \"comments\": [
-              {
-                \"path\": \"<file_path_from_diff>\",
-                \"line\": 15,
-                \"body\": \"Description of the issue or improvement.\n\n\`\`\`suggestion\nreplacement_code_here\n\`\`\`\"
-              }
-            ]
-          }
 
           SYSTEM_PROMPT="You are an expert code reviewer analyzing an annotated Git diff.
           Respond strictly in JSON matching this exact structure:
