@@ -17,8 +17,7 @@ The client uses an MVP (Model, View, Presenter) pattern, and all client specific
 To get the app running, you can download the latest release from the [releases](https://github.com/GitHubDanya/minesync/releases) tab.
 It is strongly recommended to run the server on Linux or WSL.
 
-A make task is written for quick setup of the server, which builds the server and loads it
-into a systemd process.
+A make task is written for quick setup of the server, which builds the server and loads it as a systemd service.
 
 Set up the server using `make install-server`.
 
@@ -38,7 +37,7 @@ The quickest way to build the application is using `make`:
 | :--     | :--
 | Both    | `make build`
 | Client only | `make build-client`
-| Server only | `make build-client`
+| Server only | `make build-server`
 
 ### Building on Linux manually
 
