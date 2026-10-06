@@ -56,7 +56,6 @@ jobs:
                       output.append(f"Line {new_line_num} (context): {line}")
 
           print("\n".join(output))
-          ')
 
           if [[ -z "$(echo "$ANNOTATED_DIFF" | tr -d '[:space:]')" ]]; then
             echo "No additions or changes detected in PR diff."
