@@ -77,12 +77,26 @@ jobs:
             ]
           }
 
+          SYSTEM_PROMPT="You are an expert code reviewer analyzing an annotated Git diff.
+          Respond strictly in JSON matching this exact structure:
+          {
+            \"summary\": \"General overview of the PR\",
+            \"comments\": [
+              {
+                \"path\": \"<file_path_from_diff>\",
+                \"line\": 15,
+                \"body\": \"Description of the issue or improvement.\"
+              }
+            ]
+          }
+
           Strict Rules:
           1. ONLY review lines marked with 'Line <N> (+)'. NEVER review 'context' lines or '(Deleted line)' entries.
           2. Use the exact integer number given in 'Line <N>' for the 'line' field in JSON.
           3. ONLY use exact relative file paths listed under '--- File: <path> ---'.
-          4. If no issues are found, return an empty array for comments: \"comments\": [].
-          5. Respond strictly in valid JSON."
+          4. Only include a \`\`\`suggestion block if offering an ACTUAL code fix/change. NEVER suggest identical code that is already on that line.
+          5. Write concise, single-paragraph comment bodies without repeating phrases.
+          6. If no actionable issues exist, return an empty array for comments: \"comments\": []."
 
           PROMPT="Annotated Git Diff:\n\n$ANNOTATED_DIFF"
 
@@ -90,7 +104,17 @@ jobs:
             --arg model "$MODEL_NAME" \
             --arg system "$SYSTEM_PROMPT" \
             --arg prompt "$PROMPT" \
-            '{model: $model, system: $system, prompt:$prompt, format: "json", stream: false}')
+            '{
+              model: $model,
+              system: $system,
+              prompt: $prompt,
+              format: "json",
+              stream: false,
+              options: {
+                temperature: 0.2,
+                repeat_penalty: 1.15
+              }
+            }')
 
           RESPONSE=$(curl -s --max-time 300 http://localhost:11434/api/generate \
             -H "Content-Type: application/json" \
