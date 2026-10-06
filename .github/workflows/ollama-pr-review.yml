@@ -53,7 +53,7 @@ jobs:
             --arg prompt "$PROMPT" \
             '{model: $model, system: $system, prompt:$prompt, format: "json", stream: false}')
 
-          RESPONSE=$(curl -s --max-time 120 http://localhost:11434/api/generate \
+          RESPONSE=$(curl -s --max-time 600 http://localhost:11434/api/generate \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
