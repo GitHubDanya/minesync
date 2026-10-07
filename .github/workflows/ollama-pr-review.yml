@@ -1,0 +1,149 @@
+name: Ollama Inline PR Reviewer
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/review') }}
+    runs-on: self-hosted
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+
+      - name: Generate PR Review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+          MODEL_NAME: "qwen2.5-coder:32b-instruct-q3_K_M"
+        run: |
+          COMMIT_ID=$(gh pr view $PR_NUMBER --json headRefOid -q .headRefOid)
+          
+          export RAW_DIFF=$(gh pr diff $PR_NUMBER)
+          
+          ANNOTATED_DIFF=$(python3 -c '
+          import os, re
+
+          diff = os.environ.get("RAW_DIFF", "")
+          current_file = None
+          new_line_num = 0
+          output = []
+
+          for line in diff.splitlines():
+              if line.startswith("+++ b/"):
+                  current_file = line[6:]
+                  output.append(f"\n--- File: {current_file} ---")
+              elif line.startswith("@@"):
+                  match = re.search(r"\+(\d+)", line)
+                  if match:
+                      new_line_num = int(match.group(1)) - 1
+              elif current_file:
+                  if line.startswith("+") and not line.startswith("+++"):
+                      new_line_num += 1
+                      output.append(f"Line {new_line_num} (+): {line[1:]}")
+                  elif line.startswith("-") and not line.startswith("---"):
+                      output.append(f"(Deleted line): {line[1:]}")
+                  else:
+                      new_line_num += 1
+                      output.append(f"Line {new_line_num} (context): {line}")
+
+          print("\n".join(output))
+          ')
+
+          if [[ -z "$(echo "$ANNOTATED_DIFF" | tr -d '[:space:]')" ]]; then
+            echo "No additions or changes detected in PR diff."
+            gh pr comment $PR_NUMBER --body "**Ollama Code Review**: No added or modified lines found in this PR to review."
+            exit 0
+          fi
+
+          SYSTEM_PROMPT="You are an expert code reviewer analyzing an annotated Git diff.
+          Respond strictly in JSON matching this exact structure:
+          {
+            \"summary\": \"General overview of the PR\",
+            \"comments\": [
+              {
+                \"path\": \"<file_path_from_diff>\",
+                \"line\": 15,
+                \"body\": \"Description of the issue or improvement.\"
+              }
+            ]
+          }
+
+          Strict Rules:
+          1. ONLY review lines marked with 'Line <N> (+)'. NEVER review 'context' lines or '(Deleted line)' entries.
+          2. Use the exact integer number given in 'Line <N>' for the 'line' field in JSON.
+          3. ONLY use exact relative file paths listed under '--- File: <path> ---'.
+          4. Only include a \`\`\`suggestion block if offering an ACTUAL code fix/change. NEVER suggest identical code that is already on that line.
+          5. Write concise, single-paragraph comment bodies without repeating phrases.
+          6. If no actionable issues exist, return an empty array for comments: \"comments\": []."
+
+          PROMPT="Annotated Git Diff:\n\n$ANNOTATED_DIFF"
+
+          PAYLOAD=$(jq -n \
+            --arg model "$MODEL_NAME" \
+            --arg system "$SYSTEM_PROMPT" \
+            --arg prompt "$PROMPT" \
+            '{
+              model: $model,
+              system: $system,
+              prompt: $prompt,
+              format: "json",
+              stream: false,
+              options: {
+                temperature: 0.2,
+                repeat_penalty: 1.15
+              }
+            }')
+
+          RESPONSE=$(curl -s --max-time 300 http://localhost:11434/api/generate \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          RAW_RESPONSE=$(echo "$RESPONSE" | jq -r '.response // empty')
+          CLEAN_JSON=$(echo "$RAW_RESPONSE" | sed -e 's/^```json//' -e 's/^```//' -e 's/```$//')
+
+          SUMMARY=$(echo "$CLEAN_JSON" | jq -r '.summary // "Automated Code Review"' 2>/dev/null || echo "Automated Code Review")
+          COMMENTS=$(echo "$CLEAN_JSON" | jq -c '[.comments[]? | {path: .path, line: (.line | tonumber? // .line), side: "RIGHT", body: .body}]' 2>/dev/null || echo "[]")
+
+          if [[ -z "$COMMENTS" || "$COMMENTS" == "null" ]]; then
+            COMMENTS="[]"
+          fi
+
+          REVIEW_PAYLOAD=$(jq -n \
+            --arg commit_id "$COMMIT_ID" \
+            --arg body "$SUMMARY" \
+            --argjson comments "$COMMENTS" \
+            '{commit_id: $commit_id, body: $body, event: "COMMENT", comments: $comments}')
+
+          echo "$REVIEW_PAYLOAD" > review.json
+
+          API_ERROR=$(gh api "repos/$REPO/pulls/$PR_NUMBER/reviews" --input review.json 2>&1)
+          if [ $? -ne 0 ]; then
+            echo "GitHub API Review submission failed:"
+            echo "$API_ERROR"
+            echo "Falling back to general PR comment..."
+
+            FALLBACK_BODY=$(cat <<EOF
+          ### Ollama Code Review
+
+          **Summary:**
+          $SUMMARY
+
+          ---
+
+          **Suggested Comments & Fixes:**
+          $(echo "$CLEAN_JSON" | jq -r '.comments[]? | "#### `\(.path)` (Line \(.line))\n\(.body)\n"')
+          EOF
+          )
+            gh pr comment $PR_NUMBER --body "$FALLBACK_BODY"
+          else
+            echo "Inline review posted successfully."
+          fi

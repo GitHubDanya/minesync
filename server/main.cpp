@@ -1,4 +1,7 @@
 #include "crow.h"
+#include "lib/CLI11.hpp"
+
+static const int SERVER_PORT = 18080;
 
 static const std::string SAVE_FILE_NAME = "uploaded_save.zip";
 static const std::string SAVE_FILE_EXTENSION = ".zip";
@@ -14,8 +17,16 @@ inline std::filesystem::path get_save_file_path() {
 #endif
 }
 
-int main() {
-    crow::SimpleApp app;
+int main(int argc, char** argv) {
+	CLI::App cliApp{"Minesync"};
+    argv = cliApp.ensure_utf8(argv);
+
+    int serverPort = SERVER_PORT;
+    cliApp.add_option("-p,--port", serverPort, "Port for the server");
+
+    CLI11_PARSE(cliApp, argc, argv);
+
+	crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")
     .methods(crow::HTTPMethod::GET)([]() {
@@ -89,6 +100,5 @@ int main() {
 
         return crow::response(200, responseJson);
     });
-
-    app.port(18080).multithreaded().run();
+    app.port(serverPort).multithreaded().run();
 }
