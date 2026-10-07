@@ -82,6 +82,7 @@ add_library(minesync_common STATIC
         common/lib/pfd/portable-file-dialogs.h
         common/files/FileHelpers.cpp
         common/files/FileHelpers.h
+        common/lib/CLI11.hpp
 )
 
 if(NOT WIN32)
