@@ -83,7 +83,9 @@ add_library(minesync_common STATIC
         common/files/FileHelpers.cpp
         common/files/FileHelpers.h
         common/lib/CLI11.hpp
-)
+        common/data/World.cpp
+        common/data/World.h
+        common/files/ClientAppConfig.h)
 
 if(NOT WIN32)
     target_compile_definitions(minesync_common PRIVATE
@@ -111,9 +113,6 @@ add_executable(minesync_client
         client/src/client/Client.h
         client/src/api/ApiController.cpp
         client/src/api/ApiController.h
-        common/data/World.cpp
-        common/data/World.h
-        common/files/ClientAppConfig.h
         client/src/services/WorldService.cpp
         client/src/services/WorldService.h
         client/src/presenters/MainPresenter.cpp
