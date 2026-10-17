@@ -188,6 +188,8 @@ set(CPACK_COMPONENT_SERVER_DISPLAY_NAME "MineSync Server")
 #  Windows Specific System Links & Packaging Setup
 # ==============================================================================
 if(WIN32)
+    set_target_properties(minesync_client PROPERTIES WIN32_EXECUTABLE TRUE)
+
     target_link_libraries(minesync_client PRIVATE ws2_32 mswsock crypt32 gdi32 comctl32 ole32 uuid)
     target_link_libraries(minesync_server PRIVATE ws2_32 mswsock crypt32)
 
